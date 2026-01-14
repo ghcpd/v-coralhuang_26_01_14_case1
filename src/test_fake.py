@@ -113,3 +113,54 @@ class TestFake(unittest.TestCase):
 
     def test_fake_aliases(self):
         assert FakeUserAgent is UserAgent
+
+    def test_platform_filtering_string(self):
+        ua = UserAgent(platforms="mobile")
+        # Should only return mobile user agents
+        for _ in range(10):  # Test multiple times to ensure consistency
+            ua_str = ua.random
+            browser_data = ua.getRandom
+            self.assertEqual(browser_data["type"], "mobile")
+
+    def test_platform_filtering_list(self):
+        ua = UserAgent(platforms=["mobile", "tablet"])
+        # Should only return mobile or tablet user agents
+        for _ in range(10):
+            browser_data = ua.getRandom
+            self.assertIn(browser_data["type"], ["mobile", "tablet"])
+
+    def test_platform_filtering_invalid(self):
+        with pytest.raises(AssertionError):
+            UserAgent(platforms="invalid")
+
+    def test_min_version_filtering_int(self):
+        ua = UserAgent(min_version=120)
+        for _ in range(10):
+            browser_data = ua.getRandom
+            self.assertGreaterEqual(browser_data["version"], 120.0)
+
+    def test_min_version_filtering_float(self):
+        ua = UserAgent(min_version=120.5)
+        for _ in range(10):
+            browser_data = ua.getRandom
+            self.assertGreaterEqual(browser_data["version"], 120.5)
+
+    def test_min_version_filtering_invalid(self):
+        with pytest.raises(AssertionError):
+            UserAgent(min_version="120")
+
+    def test_combined_filtering(self):
+        ua = UserAgent(platforms="pc", min_version=120)
+        for _ in range(10):
+            browser_data = ua.getRandom
+            self.assertEqual(browser_data["type"], "pc")
+            self.assertGreaterEqual(browser_data["version"], 120.0)
+
+    def test_backward_compatibility(self):
+        # Test that existing functionality still works without new parameters
+        ua = UserAgent()
+        self.assertTrue(ua.chrome)
+        self.assertTrue(ua.random)
+        browser_data = ua.getRandom
+        self.assertIsInstance(browser_data, dict)
+        self.assertIn("useragent", browser_data)
