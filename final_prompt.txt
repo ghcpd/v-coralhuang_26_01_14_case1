@@ -120,3 +120,7 @@ After completion, should support the following use cases:
 4. **Backward compatibility**: Maintain original behavior when new parameters are not passed
 5. **Tests pass**: All new test cases pass
 6. **One-click testing**: Quick functionality verification through run_tests script
+
+## Critical Execution Requirement
+
+**You must run tests locally in the workspace environment** and fix all failures before considering the task complete. Do not just create test files - execute them with `python -m pytest -q` and iterate on any import errors, test failures, or compatibility issues until all tests pass.

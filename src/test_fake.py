@@ -113,3 +113,45 @@ class TestFake(unittest.TestCase):
 
     def test_fake_aliases(self):
         assert FakeUserAgent is UserAgent
+
+    def test_platform_filtering_accepts_string_and_list_and_filters(self):
+        ua = UserAgent(platforms="mobile")
+        # class should normalize to a set containing only mobile
+        assert ua.platforms == {"mobile"}
+        res = ua.getRandom
+        assert isinstance(res, dict)
+        assert res.get("type") == "mobile"
+
+        ua2 = UserAgent(platforms=["pc"])
+        assert ua2.platforms == {"pc"}
+        assert ua2.getRandom.get("type") == "pc"
+
+    def test_min_version_filtering_supports_int_and_float(self):
+        ua = UserAgent(min_version=122)
+        res = ua.getBrowser("chrome")
+        assert res.get("version") >= 122.0
+
+        ua2 = UserAgent(min_version=122.0)
+        res2 = ua2.getBrowser("chrome")
+        assert res2.get("version") >= 122.0
+
+    def test_combined_platform_and_version_filters(self):
+        ua = UserAgent(browsers="chrome", platforms="tablet", min_version=122.0)
+        res = ua.getBrowser("chrome")
+        assert res.get("browser") == "chrome"
+        assert res.get("type") == "tablet"
+        assert res.get("version") >= 122.0
+
+    def test_invalid_platforms_and_min_version_types_raise(self):
+        with pytest.raises(AssertionError):
+            UserAgent(platforms=123)
+
+        with pytest.raises(AssertionError):
+            UserAgent(min_version="not-a-number")
+
+    def test_filters_with_no_results_use_fallback_consistently(self):
+        ua = UserAgent(browsers="chrome", platforms="mobile", min_version=9999)
+        res = ua.getBrowser("chrome")
+        # when filters produce no matches, behavior should match existing fallback path
+        assert isinstance(res, dict)
+        assert res.get("useragent") == ua.fallback
