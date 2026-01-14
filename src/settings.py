@@ -23,4 +23,7 @@ OS_REPLACEMENTS = {
     "windows": ["win10", "win7"],
     "macos": ["macos"],
     "linux": ["linux"],
+    # allow users to request mobile/tablet logical OS groups
+    "mobile": ["android", "ios"],
+    "tablet": ["ios", "android"],
 }
