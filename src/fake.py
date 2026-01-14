@@ -10,8 +10,12 @@ class FakeUserAgent:
     def __init__(
         self,
         browsers=["chrome", "edge", "firefox", "safari"],
-        os=["windows", "macos", "linux"],
+        # include mobile/tablet tokens by default so platform filtering without
+        # an explicit `os=` still matches mobile/tablet entries
+        os=["windows", "macos", "linux", "mobile", "tablet"],
         min_percentage=0.0,
+        min_version=0.0,
+        platforms=("pc", "mobile", "tablet"),
         fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         safe_attrs=tuple(),
     ):
@@ -36,6 +40,22 @@ class FakeUserAgent:
             min_percentage, float
         ), "Minimum usage percentage must be float"
         self.min_percentage = min_percentage
+
+        # min_version: allow int/float, default 0.0 (no filtering)
+        assert isinstance(min_version, (int, float)), "min_version must be int or float"
+        self.min_version = float(min_version)
+
+        # platforms: accept string or list; default includes all types
+        assert isinstance(platforms, (list, tuple, str)), "platforms must be string or list/tuple"
+        if isinstance(platforms, str):
+            platforms = [platforms]
+        # normalize and validate platform values
+        normalized_platforms = {p.lower() for p in platforms}
+        allowed = {"pc", "mobile", "tablet"}
+        assert normalized_platforms.issubset(
+            allowed
+        ), f"platforms must be subset of {sorted(list(allowed))}"
+        self.platforms = normalized_platforms
 
         assert isinstance(fallback, str), "fallback must be string"
         self.fallback = fallback
@@ -65,32 +85,15 @@ class FakeUserAgent:
             request = request.lower()
             request = settings.SHORTCUTS.get(request, request)
 
+            # Build filtered list using a shared matcher (supports browser/os/percent/type/version)
             if request == "random":
-                # Filter the browser list based on the browsers array using lambda
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] in self.browsers
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = [
+                    e for e in self.data_browsers if self._entry_matches(e)
+                ]
             else:
-                # Or when random isn't select, we filter the browsers array based on the 'request' using lamba
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] == request
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = [
+                    e for e in self.data_browsers if self._entry_matches(e, request)
+                ]
 
             # Pick a random browser user-agent from the filtered browsers
             # And return the full dict
@@ -133,31 +136,13 @@ class FakeUserAgent:
             attr = settings.SHORTCUTS.get(attr, attr)
 
             if attr == "random":
-                # Filter the browser list based on the browsers array using lambda
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] in self.browsers
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = [
+                    e for e in self.data_browsers if self._entry_matches(e)
+                ]
             else:
-                # Or when random isn't select, we filter the browsers array based on the 'attr' using lamba
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] == attr
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = [
+                    e for e in self.data_browsers if self._entry_matches(e, attr)
+                ]
 
             # Pick a random browser user-agent from the filtered browsers
             # And return the useragent string.
@@ -174,6 +159,39 @@ class FakeUserAgent:
                 )
 
                 return self.fallback
+
+    def _entry_matches(self, entry, request=None):
+        """Return True if `entry` satisfies all active filters.
+
+        - request: specific browser name (or None for any)
+        - checks: browser, os, percent, type (platforms), version (min_version)
+        """
+        # browser matching
+        if request and request != "random":
+            if entry.get("browser") != request:
+                return False
+        else:
+            if entry.get("browser") not in self.browsers:
+                return False
+
+        # os / percentage checks (existing behavior)
+        if entry.get("os") not in self.os:
+            return False
+        if entry.get("percent", 0.0) < self.min_percentage:
+            return False
+
+        # platform (type) check
+        if entry.get("type") not in self.platforms:
+            return False
+
+        # version check
+        try:
+            if float(entry.get("version", 0.0)) < float(self.min_version):
+                return False
+        except (TypeError, ValueError):
+            return False
+
+        return True
 
     @property
     def chrome(self):

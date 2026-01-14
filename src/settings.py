@@ -23,4 +23,7 @@ OS_REPLACEMENTS = {
     "windows": ["win10", "win7"],
     "macos": ["macos"],
     "linux": ["linux"],
+    # convenience mappings for mobile/tablet tokens
+    "mobile": ["android", "ios"],
+    "tablet": ["android", "ios"],
 }
