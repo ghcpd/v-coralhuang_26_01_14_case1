@@ -23,4 +23,6 @@ OS_REPLACEMENTS = {
     "windows": ["win10", "win7"],
     "macos": ["macos"],
     "linux": ["linux"],
+    "android": ["android"],
+    "ios": ["ios"],
 }
