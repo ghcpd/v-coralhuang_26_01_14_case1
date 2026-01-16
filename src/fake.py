@@ -14,6 +14,8 @@ class FakeUserAgent:
         min_percentage=0.0,
         fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         safe_attrs=tuple(),
+        platforms=None,
+        min_version=0.0,
     ):
         # Check inputs
         assert isinstance(browsers, (list, str)), "browsers must be list or string"
@@ -52,8 +54,58 @@ class FakeUserAgent:
             ), "safe_attrs must be list\\tuple\\set of strings or unicode"
         self.safe_attrs = set(safe_attrs)
 
+        # Handle platforms parameter (after assertion validation)
+        assert platforms is None or isinstance(
+            platforms, (list, str)
+        ), "platforms must be list, string, or None"
+        if platforms is not None:
+            if isinstance(platforms, str):
+                platforms = [platforms]
+            # Convert to lowercase for consistency
+            self.platforms = [p.lower() for p in platforms]
+        else:
+            self.platforms = ["pc", "mobile", "tablet"]
+
+        # Add mobile OS types if mobile platform is selected
+        if "mobile" in self.platforms and "android" not in self.os and "ios" not in self.os:
+            self.os.extend(["android", "ios"])
+        elif self.platforms == ["pc", "mobile", "tablet"] and ("android" not in self.os and "ios" not in self.os):
+            # Default includes all platforms, so add mobile OSes
+            self.os.extend(["android", "ios"])
+
+        # Handle min_version parameter
+        assert isinstance(
+            min_version, (int, float)
+        ), "min_version must be int or float"
+        self.min_version = float(min_version)
+
         # Next, load our local data file into memory (browsers.json)
         self.data_browsers = load()
+
+    def _apply_filters(self, browser_filter=None):
+        """
+        Helper method to apply all filters to the data.
+        
+        Args:
+            browser_filter: Optional lambda function to filter by browser name
+        
+        Returns:
+            Filtered list of user agents
+        """
+        filtered_browsers = list(
+            filter(
+                lambda x: (
+                    (browser_filter is None or browser_filter(x["browser"]))
+                    and x.get("browser") in self.browsers
+                    and x["os"] in self.os
+                    and x["percent"] >= self.min_percentage
+                    and x.get("type") in self.platforms
+                    and x.get("version", 0.0) >= self.min_version
+                ),
+                self.data_browsers,
+            )
+        )
+        return filtered_browsers
 
     # This method will return an object
     # Usage: ua.getBrowser('firefox')
@@ -66,30 +118,10 @@ class FakeUserAgent:
             request = settings.SHORTCUTS.get(request, request)
 
             if request == "random":
-                # Filter the browser list based on the browsers array using lambda
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] in self.browsers
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = self._apply_filters(browser_filter=None)
             else:
-                # Or when random isn't select, we filter the browsers array based on the 'request' using lamba
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] == request
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
+                filtered_browsers = self._apply_filters(
+                    browser_filter=lambda x: x == request
                 )
 
             # Pick a random browser user-agent from the filtered browsers
@@ -112,6 +144,7 @@ class FakeUserAgent:
                     "browser": "chrome",
                     "version": 114.0,
                     "os": "win10",
+                    "type": "pc",
                 }
 
     # This method will use the method below, returning a string
@@ -133,30 +166,10 @@ class FakeUserAgent:
             attr = settings.SHORTCUTS.get(attr, attr)
 
             if attr == "random":
-                # Filter the browser list based on the browsers array using lambda
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] in self.browsers
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
-                )
+                filtered_browsers = self._apply_filters(browser_filter=None)
             else:
-                # Or when random isn't select, we filter the browsers array based on the 'attr' using lamba
-                # And based on OS list
-                # And percentage is bigger then min percentage
-                # And convert the iterator back to a list
-                filtered_browsers = list(
-                    filter(
-                        lambda x: x["browser"] == attr
-                        and x["os"] in self.os
-                        and x["percent"] >= self.min_percentage,
-                        self.data_browsers,
-                    )
+                filtered_browsers = self._apply_filters(
+                    browser_filter=lambda x: x == attr
                 )
 
             # Pick a random browser user-agent from the filtered browsers
