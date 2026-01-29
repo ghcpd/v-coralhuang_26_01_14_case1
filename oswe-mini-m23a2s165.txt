@@ -1,0 +1,334 @@
+User: # Agent Prompt - Issue #70: Need disable/enable mobile browser agents
+
+## Background
+
+You will be working with an existing version of the fake-useragent library (code in the src/ folder). The core functionality of this library is to return User-Agent strings from a built-in list based on specified conditions, primarily used in web scraping projects to simulate different browser access.
+
+**Current Problems**:
+- Users cannot specify to get UAs only from specific device platforms (PC, mobile, tablet)
+- Users cannot specify minimum browser version requirements (e.g., Chrome 120+ only)
+
+This causes inconvenience in certain scenarios (e.g., avoiding PC/Mobile redirects, requiring new browser features, etc.).
+
+## Task Objectives
+
+Add two filtering features to the existing codebase while **maintaining backward compatibility**:
+
+### Feature 1: Platform Filtering (platforms parameter)
+Allow users to specify device platform types (PC/mobile/tablet) and return only matching UAs.
+
+Requirements:
+- Support platform types: `"pc"` (desktop), `"mobile"` (mobile devices), `"tablet"` (tablets)
+- Accept string or list input
+- Default includes all platforms
+
+### Feature 2: Minimum Browser Version Filtering (min_version parameter)
+Allow users to specify a minimum browser version and filter out UAs below that version.
+
+Requirements:
+- Support integer or float input
+- Use `>=` comparison rule
+- Default no filtering (0.0)
+
+## Implementation Hints
+
+1. **Analyze existing code**:
+   - Review data file structure (data/browsers.json) to understand available fields
+   - Understand existing filtering logic and parameter handling
+   - Note repetitive patterns in the code
+
+2. **Data source**:
+   - UA data is in structured JSON format
+   - Check data file to determine how to identify platform types and version information
+
+3. **Code quality**:
+   - Eliminate code duplication
+   - Maintain consistency with existing code style
+   - Appropriate parameter validation and type handling
+
+## Core Requirements
+
+### 1. API Design
+- Add two optional parameters `min_version` and `platforms` to the `FakeUserAgent` class
+- Parameters must have reasonable default values to ensure unchanged behavior when not passed
+- Support flexible input formats (e.g., platforms supports string or list)
+- Extend default OS list to include mobile platforms
+
+### 2. Filtering Implementation
+- Add platform and version filtering conditions to existing filtering logic
+- Refactor code to eliminate duplicate filtering logic
+- Ensure multiple filtering conditions can be correctly combined
+
+### 3. Compatibility
+- Do not break existing API and method signatures
+- Maintain original error handling mechanisms
+- Behavior when filtering results are empty should be consistent with existing logic
+
+## Testing Requirements
+
+Add test cases in `test_fake.py` covering at least:
+
+1. **Basic functionality**:
+   - Platform filtering works correctly
+   - Version filtering works correctly
+   - Combined filtering works correctly
+
+2. **Parameter flexibility**:
+   - platforms supports string and list input
+   - min_version supports integer and float input
+
+3. **Backward compatibility**:
+   - Library works normally when new parameters are not passed
+   - Existing functionality is not affected
+
+## Deliverables
+
+After completing the implementation, submit the following files:
+
+1. **Modified code files**:
+   - `fake.py` - Implement new features
+   - `test_fake.py` - Add test cases
+
+2. **Documentation files** (new):
+   - `README.md` - Explain how to use the new features, including:
+     * Feature overview
+     * Parameter descriptions (platforms and min_version)
+     * Usage examples (at least 3 scenarios)
+     * Notes and caveats
+
+3. **Test scripts** (new):
+   - `run_tests.sh` (Linux/Mac) and/or `run_tests.bat` (Windows)
+   - One-click script to run tests
+   - If tests require additional dependencies (e.g., pytest), provide `requirements.txt` and install dependencies in the script first
+   - Ensure executable in any clean Python environment
+
+## Constraints
+
+1. **Backward compatibility**: All new parameters must be optional, behavior unchanged when not passed
+2. **Use existing data**: Implement based on existing data file structure, do not modify data format
+3. **Code style**: Follow existing code style and conventions
+4. **Do not modify core logic**: Preserve existing parameters and error handling mechanisms
+5. **Independent work**: Implement independently based on code in src/ folder
+
+## Success Criteria
+
+After completion, should support the following use cases:
+
+1. **Mobile filtering**: Get only mobile device UAs (for mobile web scraping)
+2. **Version filtering**: Get only UAs with browsers above specific versions (for scenarios requiring new features)
+3. **Combined filtering**: Precise filtering with multiple conditions combined
+4. **Backward compatibility**: Maintain original behavior when new parameters are not passed
+5. **Tests pass**: All new test cases pass
+6. **One-click testing**: Quick functionality verification through run_tests script
+
+
+GitHub Copilot: Proceeding to inspect the code and tests to determine necessary changes and where to add platform/version filtering. I'll open the important source and test files next.
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/fake.py)
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/settings.py)
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/data/browsers.json)
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/test_fake.py)
+
+I'll make the code edits (source + settings), add tests, and create README and test scripts. I'll mark work in the todo list and run tests afterward.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/fake.py)
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Created [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/README.md)
+
+Created [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/run_tests.bat)
+
+Created [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/run_tests.sh)
+
+Created [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/requirements.txt)
+
+Ran terminal command: python -m pytest -q
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/__init__.py)
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python -m pytest -q
+
+Searched for regex `import settings|from settings|import utils|from utils` (`**/src/**`), 3 results
+
+Read [](file:///c%3A/Bug_Bash/26_01_14/oswe-mini-m23a2s165/src/test_fake.py)
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python -m pytest src/test_fake.py::TestFake::test_platform_filter_string_and_list -q
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Continue to iterate?
+[object Object]
+
+Made changes.
+
+User: @agent Continue: "Continue to iterate?"
+
+GitHub Copilot: Optimizing tool selection...
+
+Ran terminal command: python -m pytest src/test_fake.py::TestFake::test_platform_filter_string_and_list -q
+
+Ran terminal command: python -m pytest -q
+
+Preamble
+Perfect — I inspected the codebase, implemented platform + minimum-version filtering, added tests, and created docs + test scripts. Next, I'll run the full test suite (already done) and show what changed.
+
+## What I changed ✅
+
+### Code (behavior + API)
+- File: fake.py
+  - Added two optional constructor parameters:
+    - `platforms` — accepts `str` or `list` (values: `"pc"`, `"mobile"`, `"tablet"`). Default = all platforms.
+    - `min_version` — accepts `int` or `float`, default `0.0` (no filtering).
+  - Added robust validation and normalization for inputs.
+  - Added combined filtering logic (browser, os, percent, platform, version).
+  - Extracted a single private helper `_entry_matches()` to remove duplicated filter logic.
+  - Extended default `os` list to include `"android"` and `"ios"` so mobile/platform filtering works without extra args.
+  - Preserved all existing public APIs and fallback/error behavior.
+
+- File: settings.py
+  - Added OS replacements for logical mobile/tablet groups:
+    - `"mobile": ["android", "ios"]`
+    - `"tablet": ["ios", "android"]`
+
+- File: __init__.py, fake.py, test_fake.py
+  - Converted internal imports to package-relative imports for consistent test/package behavior.
+
+### Tests
+- File: test_fake.py
+  - Added unit tests covering:
+    - `platforms` (string & list input)
+    - `min_version` (int & float inputs)
+    - Combined platform + min_version filtering
+    - Backward-compatibility behavior when new params are not provided
+
+All tests pass: 17 passed.
+
+### Documentation & scripts
+- File: README.md — usage, examples, notes for new features
+- File: requirements.txt — test dependency (`pytest`)
+- File: run_tests.sh and run_tests.bat — one-click test runners
+
+---
+
+## Key usage examples (quick) 💡
+
+- Only mobile UAs:
+  - `ua = UserAgent(platforms="mobile")`
+- Minimum browser version (Chrome 122+):
+  - `ua = UserAgent(min_version=122)`
+- Combined:
+  - `ua = UserAgent(platforms=["mobile"], min_version=121); ua.getBrowser("chrome")`
+
+---
+
+## Files changed / added 🔧
+
+- Modified: fake.py, settings.py, test_fake.py, __init__.py
+- Added: README.md, requirements.txt, run_tests.sh, run_tests.bat
+
+---
+
+## Tests & verification ✅
+
+- Command (Windows): run run_tests.bat
+- Command (Linux/macOS): run run_tests.sh
+- Result: All tests pass (17 passed).
+
+---
+
+## Notes / compatibility ⚠️
+
+- Backward compatibility preserved:
+  - New parameters are optional and default behavior is unchanged except the intended extension (OS defaults now include mobile OS names to enable mobile/platform filtering).
+  - Existing error handling and fallbacks remain unchanged.
+- `platforms` accepts `str` or `list` of values: `"pc"`, `"mobile"`, `"tablet"`.
+- `min_version` accepts `int` or `float`; comparison uses `>=`.
+
+---
+
+If you want, I can:
+- Add more unit tests for edge cases (e.g. invalid `platforms` values).
+- Add docstrings or update the project changelog.
+- Produce example snippets for README showing combined real-world use cases.
+
+Which follow-up would you like next?

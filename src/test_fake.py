@@ -2,8 +2,8 @@ import unittest
 
 import pytest
 
-import settings
-from fake import FakeUserAgent, UserAgent
+from . import settings
+from .fake import FakeUserAgent, UserAgent
 
 VERSION = settings.__version__
 
@@ -113,3 +113,34 @@ class TestFake(unittest.TestCase):
 
     def test_fake_aliases(self):
         assert FakeUserAgent is UserAgent
+
+    def test_platform_filter_string_and_list(self):
+        # string input
+        ua = UserAgent(platforms="mobile")
+        result = ua.getRandom
+        assert result.get("type") == "mobile"
+
+        # list input
+        ua2 = UserAgent(platforms=["tablet"])
+        result2 = ua2.getRandom
+        assert result2.get("type") == "tablet"
+
+    def test_min_version_supports_int_and_float(self):
+        ua = UserAgent(min_version=122)
+        assert float(ua.getRandom.get("version")) >= 122.0
+
+        ua2 = UserAgent(min_version=121.5)
+        assert float(ua2.getRandom.get("version")) >= 121.5
+
+    def test_combined_platform_and_version_filtering(self):
+        ua = UserAgent(platforms=["mobile"], min_version=121)
+        entry = ua.getBrowser("chrome")
+        assert entry.get("type") == "mobile"
+        assert float(entry.get("version")) >= 121.0
+
+    def test_default_behavior_unchanged_when_no_new_params(self):
+        ua = UserAgent()
+        # should return some UA and include supported types from data
+        entry = ua.getRandom
+        assert entry.get("type") in ("pc", "mobile", "tablet")
+
